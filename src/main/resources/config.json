@@ -1,0 +1,62 @@
+{
+  "details": [
+    {
+      "group": "org.eclipse.birt",
+      "name": "technology.birt",
+      "scm": "https://github.com/eclipse-birt/birt"
+    },
+    {
+      "group": "org.eclipse.datatools.plugins",
+      "name": "tools.datatools",
+      "scm": "https://github.com/eclipse-datatools/datatools"
+    }
+  ],
+  "sites": [
+    {
+      "name": "birt",
+      "url": "https://mirrors.dotsrc.org/eclipse/birt/updates/release/4.18.0"
+    },
+    {
+      "name": "datatools",
+      "url": "https://mirrors.dotsrc.org/eclipse/datatools/updates/release/1.16.2"
+    },
+    {
+      "name": "orbit",
+      "url": "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/release/4.34.0"
+    }
+  ],
+  "mappings": [
+    {
+      "pattern": "(org\\.eclipse\\.(equinox|osgi)):.*",
+      "groupId": "org.eclipse.platform"
+    },
+    {
+      "pattern": "(org\\.eclipse\\.orbit):(derby):(.*)",
+      "groupId": "org.apache.derby"
+    },
+    {
+      "pattern": "(org\\.eclipse\\.birt\\.features):(org\\.eclipse\\.birt\\.engine\\.runtime):(.*)",
+      "groupId": "org.eclipse.birt",
+      "artifactId": "birt-runtime"
+    },
+    {
+      "pattern": "org\\.apache\\.commons\\.net",
+      "groupId": "commons-net",
+      "artifactId": "commons-net",
+      "version": "3.2"
+    }
+  ],
+  "nocheck": [
+    {
+      "pattern": "org\\.eclipse\\.birt.*"
+    },
+    {
+      "pattern": "org\\.eclipse\\.datatools.*"
+    }
+  ],
+  "publish": [
+    {
+      "id": "org.eclipse.birt.engine.runtime.feature.group"
+    }
+  ]
+}

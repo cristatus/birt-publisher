@@ -1,0 +1,50 @@
+# IDEs - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+.loadpath
+*.launch
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Misc
+*.swp
+*.bak
+*.tmp
+*.temp
+*~
+
+# Build output
+target/
+dist/
+out/
+build/
+bin/
+tmp/
+
+# Build tools
+.mvn/
+.gradle/
+
+# Birt
+/birt/
+*.pdf

@@ -16,6 +16,34 @@
     <maven.compiler.release>21</maven.compiler.release>
   </properties>
 
+  <profiles>
+    <profile>
+      <id>test</id>
+      <activation>
+        <file>
+          <exists>target/tmp/repo</exists>
+        </file>
+      </activation>
+      <repositories>
+        <repository>
+          <id>test</id>
+          <name>birt-local</name>
+          <layout>default</layout>
+          <url>file://${project.basedir}/target/tmp/repo</url>
+        </repository>
+      </repositories>
+      <dependencies>
+        <dependency>
+          <groupId>org.eclipse.birt</groupId>
+          <artifactId>birt-runtime</artifactId>
+          <version>${project.version}</version>
+          <type>pom</type>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+
   <dependencyManagement>
     <dependencies>
       <dependency>

@@ -35,7 +35,7 @@ public class Publisher {
     this.sites = sites;
   }
 
-  public void publish() throws IOException {
+  public void publish(String group) throws IOException {
     // Load sites
     for (var site : sites) {
       site.load(base);
@@ -50,11 +50,11 @@ public class Publisher {
 
     // Publish units
     for (var unit : units) {
-      publish(unit);
+      publish(unit, group);
     }
   }
 
-  private void publish(ResolvedUnit unit) throws IOException {
+  private void publish(ResolvedUnit unit, String group) throws IOException {
     // Check if we have maven coordinates
     if (unit.maven == null || unit.maven.groupId == null) {
       log.warn("No maven coordinates found for {}", unit.id);
@@ -78,7 +78,7 @@ public class Publisher {
 
     var pomName = unit.maven.artifactId + "-" + unit.maven.version + ".pom";
     var pomFile = base.resolve(pomName);
-    var pom = new Pom(unit).pom(isPom).info(info).build();
+    var pom = new Pom(unit).group(group).pom(isPom).info(info).build();
 
     Files.writeString(pomFile, pom);
     try {

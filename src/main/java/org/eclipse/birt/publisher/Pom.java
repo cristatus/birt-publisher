@@ -11,11 +11,18 @@ public class Pom {
 
   private InfoConfig info;
 
+  private String group;
+
   private boolean pom;
   private boolean bom;
 
   public Pom(ResolvedUnit unit) {
     this.unit = unit;
+  }
+
+  public Pom group(String group) {
+    this.group = group;
+    return this;
   }
 
   public Pom pom(boolean pom) {
@@ -35,7 +42,7 @@ public class Pom {
 
   private void buildHead() {
     var maven = unit.maven;
-    var groupId = maven.groupId;
+    var groupId = group == null || group.isEmpty() ? maven.groupId : group;
     var artifactId = maven.artifactId;
     var version = maven.version;
     var packaging = bom ? "bom" : pom ? "pom" : "jar";

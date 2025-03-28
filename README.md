@@ -27,3 +27,12 @@ Run tests:
 ```sh
 $ mvn test
 ```
+
+## Custom Maven Group ID
+
+Use `maven.group` system property to publish with a custom group id.
+
+```sh
+$ mvn compile exec:java -Dmaven.group=com.example.birt
+```
+

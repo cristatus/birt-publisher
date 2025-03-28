@@ -9,6 +9,8 @@ public class Main {
     var config = Config.load();
     var base = Path.of(System.getProperty("base", "target/tmp"));
     var repo = System.getProperty("maven.repo", base.resolve("repo").toUri().toString());
+
+    var group = System.getProperty("maven.group");
     var username = System.getProperty("maven.username");
     var password = System.getProperty("maven.password");
 
@@ -18,6 +20,6 @@ public class Main {
     var sites = config.getSites().stream().map(x -> new Site(x.name, x.url)).toList();
     var publisher = new Publisher(base, config, maven, sites);
 
-    publisher.publish();
+    publisher.publish(group);
   }
 }

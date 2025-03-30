@@ -44,8 +44,8 @@ public class Publisher {
     // Find units to publish
     var units =
         findPublishCandidates().values().stream()
-            .filter(x -> x.external == false) // exclude external units
-            .filter(x -> x.id.endsWith(".feature.jar") == false) // exclude feature jars
+            .filter(x -> !x.external) // exclude external units
+            .filter(x -> !x.id.endsWith(".feature.jar")) // exclude feature jars
             .toList();
 
     // Publish units
@@ -89,7 +89,7 @@ public class Publisher {
     }
   }
 
-  private Path download(Artifact artifact) throws IOException {
+  private Path download(Artifact artifact) {
     if (artifact == null || artifact.file == null) return null;
     var file = base.resolve(artifact.file);
     Client.download(artifact.url, file);

@@ -57,7 +57,7 @@ public class BirtTest {
     return "pdf".equals(format) ? extractText(output) : Files.readString(output);
   }
 
-  private void checkOutout(String text) {
+  private void checkOutput(String text) {
     assertTrue(text.contains("Congratulations!"));
     assertTrue(
         text.contains(
@@ -69,7 +69,7 @@ public class BirtTest {
     var formats = List.of("html", "pdf");
     for (var format : formats) {
       var text = run(format);
-      checkOutout(text);
+      checkOutput(text);
     }
   }
 }

@@ -41,11 +41,11 @@ public class Config {
 
   private List<SiteConfig> sites;
 
-  private List<InfoConfig> details = new ArrayList<>();
+  private final List<InfoConfig> details = new ArrayList<>();
 
-  private List<MappingConfig> mappings = new ArrayList<>();
-  private List<PublishConfig> nocheck = new ArrayList<>();
-  private List<PublishConfig> publish = new ArrayList<>();
+  private final List<MappingConfig> mappings = new ArrayList<>();
+  private final List<PublishConfig> nocheck = new ArrayList<>();
+  private final List<PublishConfig> publish = new ArrayList<>();
 
   public List<SiteConfig> getSites() {
     return sites;

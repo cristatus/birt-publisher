@@ -63,6 +63,15 @@ public class Publisher {
             .toList();
     Tasks.processInParallel(artifacts, this::download);
 
+    // Update group id
+    if (group != null) {
+      for (var unit : units) {
+        if (unit.maven != null) {
+          unit.maven.groupId = group;
+        }
+      }
+    }
+
     // Publish units
     Tasks.processInParallel(units, x -> publish(x, group));
   }

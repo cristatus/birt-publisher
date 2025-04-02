@@ -45,6 +45,7 @@ public class Config {
 
   private final List<MappingConfig> mappings = new ArrayList<>();
   private final List<PublishConfig> candidates = new ArrayList<>();
+  private final List<PublishConfig> exclude = new ArrayList<>();
   private final List<PublishConfig> publish = new ArrayList<>();
 
   public List<SiteConfig> getSites() {
@@ -61,6 +62,10 @@ public class Config {
 
   public List<PublishConfig> getCandidates() {
     return candidates;
+  }
+
+  public List<PublishConfig> getExclude() {
+      return exclude;
   }
 
   public List<PublishConfig> getPublish() {

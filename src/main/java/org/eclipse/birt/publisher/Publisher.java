@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import org.eclipse.birt.publisher.Config.PublishConfig;
 import org.eclipse.birt.publisher.metadata.Artifact;
 import org.eclipse.birt.publisher.metadata.InstallableUnit;
 import org.eclipse.birt.publisher.metadata.MavenCoordinates;
@@ -152,11 +154,17 @@ public class Publisher {
     resolved.name = unit.name;
     resolved.description = unit.description;
 
-    // Add the unit to the map earlier to avoid infinite recursion
-    units.put(id, resolved);
-
     // Find the maven coordinates
     resolved.maven = findMavenCoordinates(unit);
+
+    // Excluded?
+    if (isExcluded(resolved)) {
+      log.info("Excluding {}", id);
+      return null;
+    }
+
+    // Add the unit to the map earlier to avoid infinite recursion
+    units.put(id, resolved);
 
     // Check if we can resolve the maven coordinates
     if (resolve(resolved)) {
@@ -217,17 +225,16 @@ public class Publisher {
 
   private boolean resolve(ResolvedUnit unit) {
     if (unit.maven == null) return false;
-    if (isCandidate(unit.id, unit.maven)) return false;
+    if (isCandidate(unit)) return false;
     return !resolve || maven.resolve(unit.maven.toString());
   }
 
-  private boolean isCandidate(String id, MavenCoordinates maven) {
-    for (var candidate : config.getCandidates()) {
-      if (candidate.id != null && candidate.id.equals(id)) {
-        return true;
-      }
-      if (candidate.pattern != null) {
-        var pattern = Pattern.compile(candidate.pattern);
+  private boolean isMatched(ResolvedUnit unit, PublishConfig config) {
+    var id = unit.id;
+    var maven = unit.maven;
+      if (config.id != null && config.id.equals(id)) return true;
+      if (config.pattern != null) {
+        var pattern = Pattern.compile(config.pattern);
         if (maven != null) {
           // Check if the pattern matches the maven coordinates
           var matcher = pattern.matcher(maven.toString());
@@ -237,6 +244,23 @@ public class Publisher {
           var matcher = pattern.matcher(id);
           if (matcher.matches()) return true;
         }
+    }
+    return false;
+  }
+
+  private boolean isExcluded(ResolvedUnit unit) {
+    for (var exclude : config.getExclude()) {
+      if (isMatched(unit, exclude)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isCandidate(ResolvedUnit unit) {
+    for (var candidate : config.getCandidates()) {
+      if (isMatched(unit, candidate)) {
+        return true;
       }
     }
     return false;

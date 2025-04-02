@@ -66,6 +66,11 @@
       "id": "uk.co.spudsoft.birt.emitters.excel"
     }
   ],
+  "exclude": [
+    {
+      "id": "org.eclipse.birt.axis.overlay"
+    }
+  ],
   "publish": [
     {
       "id": "org.eclipse.birt.engine.runtime.feature.group"

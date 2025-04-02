@@ -126,6 +126,7 @@ The application uses a configuration file to define artifact details, P2 update 
 - **`sites`** – P2 update sites to scan
 - **`mappings`** – Rules to adjust Maven coordinates
 - **`candidates`** – Candiate units to publish
+- **`exclude`** - Exclude units completely (even from dependencies)
 - **`publish`** – List of units to publish
 
 Besides the `candiates` units, we can force maven central check using `-Dmaven.resolve=true` property.

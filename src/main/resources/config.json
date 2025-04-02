@@ -46,7 +46,7 @@
       "version": "3.2"
     },
     {
-      "pattern": "org\\.eclipse\\.orbit\\.xml-apis-ext",
+      "pattern": "(org\\.eclipse\\.orbit\\.legacy):(org\\.eclipse\\.orbit\\.xml-apis-ext):(.*)",
       "groupId": "xml-apis",
       "artifactId": "xml-apis-ext",
       "version": "1.3.04"
@@ -58,9 +58,6 @@
     },
     {
       "pattern": "org\\.eclipse\\.datatools.*"
-    },
-    {
-      "id": "org.apache.axis"
     },
     {
       "id": "uk.co.spudsoft.birt.emitters.excel"

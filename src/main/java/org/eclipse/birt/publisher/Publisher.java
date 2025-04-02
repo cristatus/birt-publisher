@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
 import org.eclipse.birt.publisher.Config.PublishConfig;
 import org.eclipse.birt.publisher.metadata.Artifact;
 import org.eclipse.birt.publisher.metadata.InstallableUnit;
@@ -47,16 +46,7 @@ public class Publisher {
 
   public void publish(String group) throws IOException {
     // Load sites
-    sites.stream()
-        .parallel()
-        .forEach(
-            site -> {
-              try {
-                site.load(base);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+    Tasks.processInParallel(sites, x -> x.load(base));
 
     // Find units to publish
     var units =
@@ -66,16 +56,15 @@ public class Publisher {
             .toList();
 
     // Download them in advance
-    units.stream()
-        .flatMap(unit -> Stream.of(unit.artifact, unit.sourceArtifact))
-        .filter(Objects::nonNull)
-        .parallel()
-        .forEach(this::download);
+    var artifacts =
+        units.stream()
+            .flatMap(unit -> Stream.of(unit.artifact, unit.sourceArtifact))
+            .filter(Objects::nonNull)
+            .toList();
+    Tasks.processInParallel(artifacts, this::download);
 
     // Publish units
-    for (var unit : units) {
-      publish(unit, group);
-    }
+    Tasks.processInParallel(units, x -> publish(x, group));
   }
 
   private void publish(ResolvedUnit unit, String group) throws IOException {

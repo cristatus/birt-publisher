@@ -32,7 +32,7 @@ public class Client {
       return;
     }
 
-    log.debug("Downloading {}", url);
+    log.info("Downloading {}", url);
 
     var temp = file.resolveSibling(file.getFileName() + ".part");
     var request = HttpRequest.newBuilder().uri(URI.create(url)).build();

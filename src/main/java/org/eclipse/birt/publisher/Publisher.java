@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.eclipse.birt.publisher.metadata.Artifact;
 import org.eclipse.birt.publisher.metadata.InstallableUnit;
 import org.eclipse.birt.publisher.metadata.MavenCoordinates;
@@ -44,9 +45,16 @@ public class Publisher {
 
   public void publish(String group) throws IOException {
     // Load sites
-    for (var site : sites) {
-      site.load(base);
-    }
+    sites.stream()
+        .parallel()
+        .forEach(
+            site -> {
+              try {
+                site.load(base);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
 
     // Find units to publish
     var units =
@@ -54,6 +62,13 @@ public class Publisher {
             .filter(x -> !x.external) // exclude external units
             .filter(x -> !x.id.endsWith(".feature.jar")) // exclude feature jars
             .toList();
+
+    // Download them in advance
+    units.stream()
+        .flatMap(unit -> Stream.of(unit.artifact, unit.sourceArtifact))
+        .filter(Objects::nonNull)
+        .parallel()
+        .forEach(this::download);
 
     // Publish units
     for (var unit : units) {

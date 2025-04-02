@@ -232,18 +232,18 @@ public class Publisher {
   private boolean isMatched(ResolvedUnit unit, PublishConfig config) {
     var id = unit.id;
     var maven = unit.maven;
-      if (config.id != null && config.id.equals(id)) return true;
-      if (config.pattern != null) {
-        var pattern = Pattern.compile(config.pattern);
-        if (maven != null) {
-          // Check if the pattern matches the maven coordinates
-          var matcher = pattern.matcher(maven.toString());
-          if (matcher.matches()) return true;
-        } else {
-          // Check if the pattern matches the id
-          var matcher = pattern.matcher(id);
-          if (matcher.matches()) return true;
-        }
+    if (config.id != null && config.id.equals(id)) return true;
+    if (config.pattern != null) {
+      var pattern = Pattern.compile(config.pattern);
+      if (maven != null) {
+        // Check if the pattern matches the maven coordinates
+        var matcher = pattern.matcher(maven.toString());
+        if (matcher.matches()) return true;
+      } else {
+        // Check if the pattern matches the id
+        var matcher = pattern.matcher(id);
+        if (matcher.matches()) return true;
+      }
     }
     return false;
   }

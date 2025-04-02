@@ -15,10 +15,7 @@ public class Analyzer {
   public List<Path> findJars() {
     var classPath = System.getProperty("java.class.path");
     var classList = List.of(classPath.split(System.getProperty("path.separator")));
-    return classList.stream()
-        .filter(path -> path.endsWith(".jar"))
-        .map(Path::of)
-        .collect(Collectors.toList());
+    return classList.stream().filter(path -> path.endsWith(".jar")).map(Path::of).toList();
   }
 
   /**
@@ -64,7 +61,7 @@ public class Analyzer {
         .map(line -> line.split("->")[1].trim())
         .filter(path -> path.endsWith(".jar"))
         .map(Path::of)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   /**

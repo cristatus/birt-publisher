@@ -65,7 +65,7 @@ public class Config {
   }
 
   public List<PublishConfig> getExclude() {
-      return exclude;
+    return exclude;
   }
 
   public List<PublishConfig> getPublish() {

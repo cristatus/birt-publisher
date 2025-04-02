@@ -46,12 +46,21 @@
       "version": "3.2"
     }
   ],
-  "nocheck": [
+  "candidates": [
     {
       "pattern": "org\\.eclipse\\.birt.*"
     },
     {
       "pattern": "org\\.eclipse\\.datatools.*"
+    },
+    {
+      "id": "org.apache.axis"
+    },
+    {
+      "id": "org.eclipse.orbit.xml-apis-ext"
+    },
+    {
+      "id": "uk.co.spudsoft.birt.emitters.excel"
     }
   ],
   "publish": [

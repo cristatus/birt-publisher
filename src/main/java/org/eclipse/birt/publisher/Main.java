@@ -14,12 +14,14 @@ public class Main {
     var username = System.getProperty("maven.username");
     var password = System.getProperty("maven.password");
 
+    var resolve = Boolean.getBoolean("maven.resolve");
+
     var m2 = base.resolve(".m2");
     var maven = new Maven(m2).repository(null, repo, username, password);
 
     var sites = config.getSites().stream().map(x -> new Site(x.name, x.url)).toList();
     var publisher = new Publisher(base, config, maven, sites);
 
-    publisher.publish(group);
+    publisher.resolve(resolve).publish(group);
   }
 }

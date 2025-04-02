@@ -99,13 +99,14 @@ The application uses a configuration file to define artifact details, P2 update 
       "version": "3.2"
     }
   ],
-  "nocheck": [
+  "candidates": [
     { "pattern": "org\\.eclipse\\.birt.*" },
-    { "pattern": "org\\.eclipse\\.datatools.*" }
+    { "pattern": "org\\.eclipse\\.datatools.*" },
+    { "id": "org.apache.axis" },
+    { "id": "org.eclipse.orbit.xml-apis-ext" },
+    { "id": "uk.co.spudsoft.birt.emitters.excel" }
   ],
-  "publish": [
-    { "id": "org.eclipse.birt.engine.runtime.feature.group" }
-  ]
+  "publish": [{ "id": "org.eclipse.birt.engine.runtime.feature.group" }]
 }
 ```
 
@@ -124,5 +125,7 @@ The application uses a configuration file to define artifact details, P2 update 
 - **`details`** – Metadata for POM generation (e.g., SCM information)
 - **`sites`** – P2 update sites to scan
 - **`mappings`** – Rules to adjust Maven coordinates
-- **`nocheck`** – Artifacts to exclude from Maven Central checks
+- **`candidates`** – Candiate units to publish
 - **`publish`** – List of units to publish
+
+Besides the `candiates` units, we can force maven central check using `-Dmaven.resolve=true` property.

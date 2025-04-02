@@ -44,7 +44,7 @@ public class Config {
   private final List<InfoConfig> details = new ArrayList<>();
 
   private final List<MappingConfig> mappings = new ArrayList<>();
-  private final List<PublishConfig> nocheck = new ArrayList<>();
+  private final List<PublishConfig> candidates = new ArrayList<>();
   private final List<PublishConfig> publish = new ArrayList<>();
 
   public List<SiteConfig> getSites() {
@@ -59,8 +59,8 @@ public class Config {
     return mappings;
   }
 
-  public List<PublishConfig> getNocheck() {
-    return nocheck;
+  public List<PublishConfig> getCandidates() {
+    return candidates;
   }
 
   public List<PublishConfig> getPublish() {

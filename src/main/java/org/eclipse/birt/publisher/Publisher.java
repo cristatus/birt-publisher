@@ -28,11 +28,18 @@ public class Publisher {
 
   private final List<Site> sites;
 
+  private boolean resolve;
+
   public Publisher(Path base, Config config, Maven maven, List<Site> sites) {
     this.base = base;
     this.config = config;
     this.maven = maven;
     this.sites = sites;
+  }
+
+  public Publisher resolve(boolean resolve) {
+    this.resolve = resolve;
+    return this;
   }
 
   public void publish(String group) throws IOException {
@@ -137,7 +144,7 @@ public class Publisher {
     resolved.maven = findMavenCoordinates(unit);
 
     // Check if we can resolve the maven coordinates
-    if (canCheck(resolved.maven) && maven.resolve(resolved.maven.toString())) {
+    if (resolve(resolved)) {
       // Artifact found in maven central
       resolved.external = true;
       return resolved;
@@ -193,14 +200,31 @@ public class Publisher {
     return null;
   }
 
-  private boolean canCheck(MavenCoordinates maven) {
-    if (maven == null) return false;
-    for (var skip : config.getNocheck()) {
-      var pattern = Pattern.compile(skip.pattern);
-      var matcher = pattern.matcher(maven.toString());
-      if (matcher.matches()) return false;
+  private boolean resolve(ResolvedUnit unit) {
+    if (unit.maven == null) return false;
+    if (isCandidate(unit.id, unit.maven)) return false;
+    return !resolve || maven.resolve(unit.maven.toString());
+  }
+
+  private boolean isCandidate(String id, MavenCoordinates maven) {
+    for (var candidate : config.getCandidates()) {
+      if (candidate.id != null && candidate.id.equals(id)) {
+        return true;
+      }
+      if (candidate.pattern != null) {
+        var pattern = Pattern.compile(candidate.pattern);
+        if (maven != null) {
+          // Check if the pattern matches the maven coordinates
+          var matcher = pattern.matcher(maven.toString());
+          if (matcher.matches()) return true;
+        } else {
+          // Check if the pattern matches the id
+          var matcher = pattern.matcher(id);
+          if (matcher.matches()) return true;
+        }
+      }
     }
-    return true;
+    return false;
   }
 
   private MavenCoordinates findMavenCoordinates(InstallableUnit unit) {

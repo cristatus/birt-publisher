@@ -176,7 +176,7 @@ public class Maven {
    * @param sourceJar the source jar file
    * @throws IOException if an error occurs while reading the pom file or publishing the artifact
    */
-  public void publish(Path pom, Path jar, Path sourceJar) throws IOException {
+  public void publish(Path pom, Path jar, Path sourceJar, Path javadocJar) throws IOException {
     var model = readPom(pom);
     var groupId = model.getGroupId();
     var artifactId = model.getArtifactId();
@@ -186,6 +186,7 @@ public class Maven {
     var isPom = "pom".equals(model.getPackaging());
     var addJar = jar != null && Files.exists(jar) && !isPom;
     var addSourceJar = sourceJar != null && Files.exists(sourceJar) && !isPom;
+    var addJavadocJar = javadocJar != null && Files.exists(javadocJar) && !isPom;
 
     artifacts.add(new DefaultArtifact(groupId, artifactId, "pom", version).setPath(pom));
 
@@ -195,6 +196,10 @@ public class Maven {
     if (addSourceJar) {
       artifacts.add(
           new DefaultArtifact(groupId, artifactId, "sources", "jar", version).setPath(sourceJar));
+    }
+    if (addJavadocJar) {
+      artifacts.add(
+          new DefaultArtifact(groupId, artifactId, "javadoc", "jar", version).setPath(javadocJar));
     }
 
     try {

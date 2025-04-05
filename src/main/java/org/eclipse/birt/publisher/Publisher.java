@@ -7,6 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.eclipse.birt.publisher.Config.PublishConfig;
@@ -102,12 +105,15 @@ public class Publisher {
     var pomFile = base.resolve(pomName);
     var pom = new Pom(unit).group(group).pom(isPom).info(info).build();
 
+    var javadocFile = javadoc(unit, pomFile);
+
     Files.writeString(pomFile, pom);
     try {
       // Publish to maven repository
-      maven.publish(pomFile, jarFile, sourceFile);
+      maven.publish(pomFile, jarFile, sourceFile, javadocFile);
     } finally {
       Files.deleteIfExists(pomFile);
+      if (javadocFile != null) Files.deleteIfExists(javadocFile);
     }
   }
 
@@ -117,6 +123,31 @@ public class Publisher {
     Client.download(artifact.url, file);
     Client.verify(file, artifact.sha512);
     return file;
+  }
+
+  private Path javadoc(ResolvedUnit unit, Path pomFile) throws IOException {
+    if (unit.sourceArtifact == null) {
+      return null;
+    }
+
+    var name = pomFile.getFileName().toString();
+    var jarFile = base.resolve(name.replace(".pom", "-javadoc.jar"));
+    var txtFile = base.resolve(name.replace(".pom", "-javadoc.txt"));
+
+    Files.writeString(txtFile, "Please refer to the corresponding source jar.");
+
+    var manifest = new Manifest();
+    manifest.getMainAttributes().putValue("Manifest-Version", "1.0");
+
+    // Create jar file
+    try (var out = new JarOutputStream(Files.newOutputStream(jarFile), manifest)) {
+      out.putNextEntry(new JarEntry("README.txt"));
+      try (var in = Files.newInputStream(txtFile)) {
+        in.transferTo(out);
+      }
+    }
+
+    return jarFile;
   }
 
   private Map<String, ResolvedUnit> findPublishCandidates() {

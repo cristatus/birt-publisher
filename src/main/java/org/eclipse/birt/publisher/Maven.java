@@ -62,11 +62,12 @@ public class Maven {
 
   private final Settings settings;
 
-  public Maven(Path local, MavenConfig config) {
+  public Maven(Path base, MavenConfig config) {
     var supplier = new RepositorySystemSupplier();
     var system = supplier.get();
     var session = MavenRepositorySystemUtils.newSession();
     var central = new RemoteRepository.Builder("central", "default", MAVEN_CENTRAL).build();
+    var local = base.resolve("repo");
 
     session.setLocalRepositoryManager(
         system.newLocalRepositoryManager(session, new LocalRepository(local)));
@@ -102,7 +103,7 @@ public class Maven {
     var id = config.repoId;
     var url = config.repoUrl;
     if (url == null) {
-      url = local.resolve("repository").toUri().toString();
+      url = local.toUri().toString();
     }
 
     if (id != null) {

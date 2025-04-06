@@ -72,6 +72,15 @@ public class Publisher {
       }
     }
 
+    // Update to snapshot version
+    if (Boolean.TRUE.equals(config.getMaven().snapshots)) {
+      for (var unit : units) {
+        if (unit.maven != null && unit.maven.version != null) {
+          unit.maven.version = unit.maven.version + "-SNAPSHOT";
+        }
+      }
+    }
+
     // Publish units
     Tasks.processInParallel(units, x -> publish(x, group));
   }

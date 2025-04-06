@@ -40,6 +40,17 @@ mvn exec:java \
   -Dgpg.passphrase=TheBigSecret
 ```
 
+to publish shapshots:
+
+```sh
+mvn exec:java \
+  -Dmaven.repo.id=birt-repo \
+  -Dmaven.profile=birt-profile \
+  -Dmaven.snapshots=true \
+  -Dgpg.key=/path/to/gpg.key \
+  -Dgpg.passphrase=TheBigSecret
+```
+
 ## Testing
 
 To deploy artifacts to a local repository (`tmp/repo`) for testing:
@@ -70,6 +81,7 @@ mvn compile exec:java -Dmaven.group=com.example.birt
 - `-Dmaven.repo.password=<password>` - reposotpry password
 - `-Dmaven.profile=<name>` - maven profile to use
 - `-Dmaven.group=<com.example.birt>` - custom group id
+- `-Dmaven.snapshots=true` - whether to publish snapshots
 - `-Dmaven.resolved=true` - resolve all artifacts and their dependencies
 - `-Dgpg.key=<file>` - gnupg key file
 - `-Dgpg.passphrase=<password>` - gnupg passphrase to unlock the key

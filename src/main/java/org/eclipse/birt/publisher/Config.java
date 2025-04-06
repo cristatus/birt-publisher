@@ -23,6 +23,7 @@ public class Config {
 
   public static final String MAVEN_GROUP = "maven.group";
   public static final String MAVEN_RESOLVE = "maven.resolve";
+  public static final String MAVEN_SNAPSHOTS = "maven.snapshots";
 
   private static final String GPG_KEY = "gpg.key";
   private static final String GPG_PASSPHRASE = "gpg.passphrase";
@@ -60,6 +61,7 @@ public class Config {
     public String password;
     public String group;
     public Boolean resolve;
+    public Boolean snapshots;
     public String gpgKey;
     public String gpgPassphrase;
     public String gpgFingerprint;
@@ -107,6 +109,7 @@ public class Config {
     maven.password = System.getProperty(MAVEN_REPO_PASSWORD);
     maven.group = System.getProperty(MAVEN_GROUP);
     maven.resolve = Boolean.getBoolean(MAVEN_RESOLVE);
+    maven.snapshots = Boolean.getBoolean(MAVEN_SNAPSHOTS);
     maven.gpgKey = System.getProperty(GPG_KEY);
     maven.gpgPassphrase = System.getProperty(GPG_PASSPHRASE);
     maven.gpgFingerprint = System.getProperty(GPG_FINGERPRINT);

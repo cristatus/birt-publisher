@@ -34,8 +34,6 @@ public class Publisher {
 
   private final List<Site> sites;
 
-  private boolean resolve;
-
   public Publisher(Path base, Config config, Maven maven, List<Site> sites) {
     this.base = base;
     this.config = config;
@@ -43,12 +41,10 @@ public class Publisher {
     this.sites = sites;
   }
 
-  public Publisher resolve(boolean resolve) {
-    this.resolve = resolve;
-    return this;
-  }
+  public void publish() throws IOException {
+    // Customize maven group id
+    var group = config.getMaven().group;
 
-  public void publish(String group) throws IOException {
     // Load sites
     Tasks.processInParallel(sites, x -> x.load(base));
 
@@ -251,7 +247,8 @@ public class Publisher {
   private boolean resolve(ResolvedUnit unit) {
     if (unit.maven == null) return false;
     if (isCandidate(unit)) return false;
-    return !resolve || maven.resolve(unit.maven.toString());
+    var canResolve = Boolean.TRUE.equals(config.getMaven().resolve);
+    return !canResolve || maven.resolve(unit.maven.toString());
   }
 
   private boolean isMatched(ResolvedUnit unit, PublishConfig config) {

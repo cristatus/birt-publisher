@@ -15,6 +15,15 @@ import java.util.List;
 
 public class Config {
 
+  public static final String MAVEN_PROFILE = "maven.profile";
+  public static final String MAVEN_REPO_ID = "maven.repo.id";
+  public static final String MAVEN_REPO_URL = "maven.repo.url";
+  public static final String MAVEN_REPO_USERNAME = "maven.repo.username";
+  public static final String MAVEN_REPO_PASSWORD = "maven.repo.password";
+
+  public static final String MAVEN_GROUP = "maven.group";
+  public static final String MAVEN_RESOLVE = "maven.resolve";
+
   public static class InfoConfig {
     public String group;
     public String name;
@@ -37,6 +46,16 @@ public class Config {
   public static class PublishConfig {
     public String id;
     public String pattern;
+  }
+
+  public static class MavenConfig {
+    public String repoId;
+    public String repoUrl;
+    public String profile;
+    public String username;
+    public String password;
+    public String group;
+    public Boolean resolve;
   }
 
   private List<SiteConfig> sites;
@@ -70,6 +89,18 @@ public class Config {
 
   public List<PublishConfig> getPublish() {
     return publish;
+  }
+
+  public MavenConfig getMaven() {
+    var maven = new MavenConfig();
+    maven.repoId = System.getProperty(MAVEN_REPO_ID);
+    maven.repoUrl = System.getProperty(MAVEN_REPO_URL);
+    maven.profile = System.getProperty(MAVEN_PROFILE);
+    maven.username = System.getProperty(MAVEN_REPO_USERNAME);
+    maven.password = System.getProperty(MAVEN_REPO_PASSWORD);
+    maven.group = System.getProperty(MAVEN_GROUP);
+    maven.resolve = Boolean.getBoolean(MAVEN_RESOLVE);
+    return maven;
   }
 
   public static Config load() throws IOException {

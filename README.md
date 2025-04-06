@@ -19,9 +19,15 @@ Run the publisher with the required parameters:
 
 ```sh
 mvn exec:java \
-  -Dmaven.repo=https://repo.example.com/birt \
+  -Dmaven.repo.url=https://repo.example.com/birt \
   -Dmaven.username=username \
   -Dmaven.password=password
+```
+
+or, use repository id from `settings.xml`
+
+```
+mvn exec:java -Dmaven.repo.id=birt-repo -Dmaven.profile=birt-profile
 ```
 
 ## Testing
@@ -45,6 +51,16 @@ Use the `maven.group` system property to specify a custom Maven group ID:
 ```sh
 mvn compile exec:java -Dmaven.group=com.example.birt
 ```
+
+## Maven options
+
+- `-Dmaven.repo.id=<id>` - repository id
+- `-Dmaven.repo.url=<url>` - repository url
+- `-Dmaven.repo.username=<username>` - repository username
+- `-Dmaven.repo.password=<password>` - reposotpry password
+- `-Dmaven.profile=<name>` - maven profile to use
+- `-Dmaven.group=<com.example.birt>` - custom group id
+- `-Dmaven.resolved=true` - resolve all artifacts and their dependencies
 
 ## How It Works
 

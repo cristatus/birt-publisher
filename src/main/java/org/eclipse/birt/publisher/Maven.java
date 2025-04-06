@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.apache.maven.settings.Repository;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.DefaultSettingsBuilderFactory;
+import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuildingException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -14,54 +20,128 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
-import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.birt.publisher.Config.MavenConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Maven repository client to resolve and publish artifacts
- *
- * <p>This class uses the Aether library to resolve and publish Maven artifacts. It can be used to
- * resolve artifacts from a local or remote repository, and to publish artifacts to a remote
- * repository.
- */
 public class Maven {
 
   private static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2";
 
+  private static final String MAVEN_USER = System.getProperty("user.home") + "/.m2";
+  private static final String MAVEN_HOME = System.getProperty("maven.home");
+
   private static final Logger log = LoggerFactory.getLogger(Maven.class);
 
-  private final RepositorySystem repositorySystem;
+  private final RepositorySystem system;
   private final RepositorySystemSession session;
   private final RemoteRepository central;
+  private final RemoteRepository remote;
 
-  private String id;
-  private String repo;
-  private String username;
-  private String password;
+  private final Settings settings;
 
-  /**
-   * Create a Maven instance
-   *
-   * @param local the local repository path
-   */
-  public Maven(Path local) {
-    var repositorySystem = new RepositorySystemSupplier().get();
-    var session =
-        new SessionBuilderSupplier(repositorySystem)
-            .get()
-            .withLocalRepositoryBaseDirectories(local)
-            .build();
+  public Maven(Path local, MavenConfig config) {
+    var system = new RepositorySystemSupplier().get();
+    var session = MavenRepositorySystemUtils.newSession();
     var central = new RemoteRepository.Builder("central", "default", MAVEN_CENTRAL).build();
 
-    this.repositorySystem = repositorySystem;
+    session.setLocalRepositoryManager(
+        system.newLocalRepositoryManager(session, new LocalRepository(local)));
+
+    this.system = system;
     this.session = session;
     this.central = central;
+    this.settings = getSettings();
+    this.remote = getRemoteRepository(config, local);
+  }
+
+  private RemoteRepository getRemoteRepository(MavenConfig config, Path local) {
+    var id = config.repoId;
+    var url = config.repoUrl;
+    if (url == null) {
+      url = local.resolve("repository").toUri().toString();
+    }
+
+    if (id != null) {
+      var repo = findRepository(settings, config.profile, id);
+      if (repo != null) {
+        url = repo.getUrl();
+      }
+    }
+
+    return new RemoteRepository.Builder(id, "default", url)
+        .setAuthentication(getAuthentication(config))
+        .build();
+  }
+
+  private Authentication getAuthentication(MavenConfig config) {
+    var id = config.repoId;
+    var username = config.username;
+    var password = config.password;
+
+    if (id != null && (username == null || password == null)) {
+      var server =
+          settings.getServers().stream().filter(s -> s.getId().equals(id)).findFirst().orElse(null);
+      if (server != null) {
+        username = server.getUsername();
+        password = server.getPassword();
+      }
+    }
+
+    if (username != null && password != null) {
+      return new AuthenticationBuilder().addUsername(username).addPassword(password).build();
+    }
+
+    return null;
+  }
+
+  private Repository findRepository(Settings settings, String profile, String id) {
+    // First check the profile
+    var repo =
+        settings.getProfiles().stream()
+            .filter(p -> p.getId().equals(profile))
+            .flatMap(p -> p.getRepositories().stream())
+            .filter(r -> r.getId().equals(id))
+            .findFirst()
+            .orElse(null);
+
+    if (repo != null) {
+      return repo;
+    }
+
+    // If not found, check the active profiles
+    var active = settings.getActiveProfiles();
+    return settings.getProfiles().stream()
+        .filter(p -> active.contains(p.getId()))
+        .flatMap(p -> p.getRepositories().stream())
+        .filter(r -> r.getId().equals(id))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private Settings getSettings() {
+    var request = new DefaultSettingsBuildingRequest();
+    var userConf = Path.of(MAVEN_USER).resolve("settings.xml");
+    var mavenConf = Path.of(MAVEN_HOME).resolve("conf").resolve("settings.xml");
+
+    request.setGlobalSettingsFile(userConf.toFile());
+    request.setUserSettingsFile(mavenConf.toFile());
+
+    try {
+      return new DefaultSettingsBuilderFactory()
+          .newInstance()
+          .build(request)
+          .getEffectiveSettings();
+    } catch (SettingsBuildingException e) {
+      throw new RuntimeException("Unable to load settings", e);
+    }
   }
 
   /**
@@ -70,11 +150,11 @@ public class Maven {
    * @param artifact the artifact to resolve
    * @return true if the artifact is resolved, false otherwise
    */
-  public boolean resolve(Artifact artifact) {
+  private boolean resolve(Artifact artifact) {
     log.debug("Resolving {}", artifact);
     var request = new ArtifactRequest().setArtifact(artifact).addRepository(central);
     try {
-      var result = repositorySystem.resolveArtifact(session, request);
+      var result = system.resolveArtifact(session, request);
       if (result.isResolved()) {
         log.debug("Resolved {}", artifact);
         return true;
@@ -94,8 +174,7 @@ public class Maven {
    * @return true if the artifact is resolved, false otherwise
    */
   public boolean resolve(String coordinates) {
-    var artifact = new DefaultArtifact(coordinates);
-    return resolve(artifact);
+    return resolve(new DefaultArtifact(coordinates));
   }
 
   /**
@@ -107,24 +186,7 @@ public class Maven {
    * @return true if the artifact is resolved, false otherwise
    */
   public boolean resolve(String groupId, String artifactId, String version) {
-    var artifact = new DefaultArtifact(groupId, artifactId, "jar", version);
-    return resolve(artifact);
-  }
-
-  /**
-   * Set the repository credentials
-   *
-   * @param id the repository id
-   * @param repo the repository url
-   * @param username the username
-   * @param password the password
-   */
-  public Maven repository(String id, String repo, String username, String password) {
-    this.id = id;
-    this.repo = repo;
-    this.username = username;
-    this.password = password;
-    return this;
+    return resolve(new DefaultArtifact(groupId, artifactId, "jar", version));
   }
 
   /**
@@ -134,28 +196,16 @@ public class Maven {
    * @throws DeploymentException if an error occurs while publishing the artifacts
    */
   private void publish(List<Artifact> artifacts) throws DeploymentException {
-    if (repo == null) {
-      throw new IllegalStateException("Repository credentials not set");
-    }
+    var request = new DeployRequest();
 
     for (var artifact : artifacts) {
       log.debug("Publishing {}", artifact.getPath());
     }
 
-    var builder = new RemoteRepository.Builder(id, "default", repo);
-
-    if (username != null && password != null) {
-      builder.setAuthentication(
-          new AuthenticationBuilder().addUsername(username).addPassword(password).build());
-    }
-
-    var repository = builder.build();
-    var request = new DeployRequest();
-
     request.setArtifacts(artifacts);
-    request.setRepository(repository);
+    request.setRepository(remote);
 
-    repositorySystem.deploy(session, request);
+    system.deploy(session, request);
 
     log.debug("Published {} artifacts", artifacts.size());
   }

@@ -26,8 +26,18 @@ mvn exec:java \
 
 or, use repository id from `settings.xml`
 
-```
+```sh
 mvn exec:java -Dmaven.repo.id=birt-repo -Dmaven.profile=birt-profile
+```
+
+to sign the artifacts with GnuPG:
+
+```sh
+mvn exec:java \
+  -Dmaven.repo.id=birt-repo \
+  -Dmaven.profile=birt-profile \
+  -Dgpg.key=/path/to/gpg.key \
+  -Dgpg.passphrase=TheBigSecret
 ```
 
 ## Testing
@@ -61,6 +71,9 @@ mvn compile exec:java -Dmaven.group=com.example.birt
 - `-Dmaven.profile=<name>` - maven profile to use
 - `-Dmaven.group=<com.example.birt>` - custom group id
 - `-Dmaven.resolved=true` - resolve all artifacts and their dependencies
+- `-Dgpg.key=<file>` - gnupg key file
+- `-Dgpg.passphrase=<password>` - gnupg passphrase to unlock the key
+- `-Dgpg.finderprint=<hex>` - the signing key finger print (to use key other than first one)
 
 ## How It Works
 

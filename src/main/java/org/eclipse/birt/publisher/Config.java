@@ -24,6 +24,10 @@ public class Config {
   public static final String MAVEN_GROUP = "maven.group";
   public static final String MAVEN_RESOLVE = "maven.resolve";
 
+  private static final String GPG_KEY = "gpg.key";
+  private static final String GPG_PASSPHRASE = "gpg.passphrase";
+  private static final String GPG_FINGERPRINT = "gpg.fingerprint";
+
   public static class InfoConfig {
     public String group;
     public String name;
@@ -56,6 +60,9 @@ public class Config {
     public String password;
     public String group;
     public Boolean resolve;
+    public String gpgKey;
+    public String gpgPassphrase;
+    public String gpgFingerprint;
   }
 
   private List<SiteConfig> sites;
@@ -100,6 +107,9 @@ public class Config {
     maven.password = System.getProperty(MAVEN_REPO_PASSWORD);
     maven.group = System.getProperty(MAVEN_GROUP);
     maven.resolve = Boolean.getBoolean(MAVEN_RESOLVE);
+    maven.gpgKey = System.getProperty(GPG_KEY);
+    maven.gpgPassphrase = System.getProperty(GPG_PASSPHRASE);
+    maven.gpgFingerprint = System.getProperty(GPG_FINGERPRINT);
     return maven;
   }
 

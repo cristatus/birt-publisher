@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -14,12 +15,17 @@ import org.apache.maven.settings.building.DefaultSettingsBuilderFactory;
 import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
 import org.apache.maven.settings.building.SettingsBuildingException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys;
+import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory;
+import org.eclipse.aether.generator.gnupg.loaders.GpgConfLoader;
+import org.eclipse.aether.generator.gnupg.loaders.GpgEnvLoader;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -38,6 +44,13 @@ public class Maven {
   private static final String MAVEN_USER = System.getProperty("user.home") + "/.m2";
   private static final String MAVEN_HOME = System.getProperty("maven.home");
 
+  private static final String GPG_ENABLED = GnupgConfigurationKeys.CONFIG_PROP_ENABLED;
+  private static final String GPG_KEY_FILE = GnupgConfigurationKeys.CONFIG_PROP_KEY_FILE_PATH;
+  private static final String GPG_KEY_PASSPHRASE =
+      "env." + GnupgConfigurationKeys.RESOLVER_GPG_KEY_PASS;
+  private static final String GPG_KEY_FINGERPRINT =
+      "env." + GnupgConfigurationKeys.RESOLVER_GPG_KEY_FINGERPRINT;
+
   private static final Logger log = LoggerFactory.getLogger(Maven.class);
 
   private final RepositorySystem system;
@@ -45,15 +58,38 @@ public class Maven {
   private final RemoteRepository central;
   private final RemoteRepository remote;
 
+  private final GnupgSignatureArtifactGeneratorFactory gpgFactory;
+
   private final Settings settings;
 
   public Maven(Path local, MavenConfig config) {
-    var system = new RepositorySystemSupplier().get();
+    var supplier = new RepositorySystemSupplier();
+    var system = supplier.get();
     var session = MavenRepositorySystemUtils.newSession();
     var central = new RemoteRepository.Builder("central", "default", MAVEN_CENTRAL).build();
 
     session.setLocalRepositoryManager(
         system.newLocalRepositoryManager(session, new LocalRepository(local)));
+
+    session.setConfigProperty(ConfigurationProperties.INTERACTIVE, false);
+
+    if (config.gpgKey != null) {
+      session.setConfigProperty(GPG_ENABLED, Boolean.TRUE);
+      session.setConfigProperty(GPG_KEY_FILE, config.gpgKey);
+      if (config.gpgPassphrase != null) {
+        session.setConfigProperty(GPG_KEY_PASSPHRASE, config.gpgPassphrase);
+      }
+      if (config.gpgFingerprint != null) {
+        session.setConfigProperty(GPG_KEY_FINGERPRINT, config.gpgFingerprint);
+      }
+    }
+
+    this.gpgFactory =
+        new GnupgSignatureArtifactGeneratorFactory(
+            supplier.getArtifactPredicateFactory(),
+            Map.of(
+                GpgEnvLoader.NAME, new GpgEnvLoader(),
+                GpgConfLoader.NAME, new GpgConfLoader()));
 
     this.system = system;
     this.session = session;
@@ -205,9 +241,55 @@ public class Maven {
     request.setArtifacts(artifacts);
     request.setRepository(remote);
 
-    system.deploy(session, request);
+    // Sign the artifacts
+    var tempFiles = sign(request, artifacts);
+    try {
+      system.deploy(session, request);
+    } finally {
+      // Delete the temporary files
+      for (var temp : tempFiles) {
+        try {
+          Files.deleteIfExists(temp);
+        } catch (IOException e) {
+          // Ignore errors
+        }
+      }
+    }
 
     log.debug("Published {} artifacts", artifacts.size());
+  }
+
+  private List<Path> sign(DeployRequest request, List<Artifact> artifacts) {
+    if (gpgFactory == null) {
+      return List.of();
+    }
+
+    try (var signer = gpgFactory.newInstance(session, request)) {
+      if (signer == null) return List.of();
+      var result = new ArrayList<Path>();
+      var signed = signer.generate(artifacts);
+      // For some reason, the generated temporary asc files
+      // are causing `file not found` errors (may be due to tmpfs?)
+      var pomPath =
+          artifacts.stream()
+              .filter(a -> a.getExtension().equals("pom"))
+              .map(Artifact::getPath)
+              .findFirst()
+              .orElseThrow(() -> new RuntimeException("No pom file found"));
+      for (var artifact : signed) {
+        var oldPath = artifact.getPath();
+        var newPath = pomPath.resolveSibling(oldPath.getFileName());
+        try {
+          Files.move(oldPath, newPath);
+        } catch (IOException e) {
+          newPath = oldPath;
+        }
+        artifact = artifact.setPath(newPath);
+        result.add(newPath);
+        request.addArtifact(artifact);
+      }
+      return result;
+    }
   }
 
   private Model readPom(Path pomFile) throws IOException {

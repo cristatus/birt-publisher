@@ -33,11 +33,11 @@ mvn exec:java -Dmaven.repo.id=birt-repo -Dmaven.profile=birt-profile
 to sign the artifacts with GnuPG:
 
 ```sh
+export GPG_KEY=/path/to/gpg.key
+export GPG_PASSPHRASE=TheBigSecret
 mvn exec:java \
   -Dmaven.repo.id=birt-repo \
-  -Dmaven.profile=birt-profile \
-  -Dgpg.key=/path/to/gpg.key \
-  -Dgpg.passphrase=TheBigSecret
+  -Dmaven.profile=birt-profile
 ```
 
 to publish shapshots:
@@ -46,9 +46,7 @@ to publish shapshots:
 mvn exec:java \
   -Dmaven.repo.id=birt-repo \
   -Dmaven.profile=birt-profile \
-  -Dmaven.snapshots=true \
-  -Dgpg.key=/path/to/gpg.key \
-  -Dgpg.passphrase=TheBigSecret
+  -Dmaven.snapshots=true
 ```
 
 ## Testing
@@ -82,10 +80,13 @@ mvn compile exec:java -Dmaven.group=com.example.birt
 - `-Dmaven.profile=<name>` - maven profile to use
 - `-Dmaven.group=<com.example.birt>` - custom group id
 - `-Dmaven.snapshots=true` - whether to publish snapshots
-- `-Dmaven.resolved=true` - resolve all artifacts and their dependencies
-- `-Dgpg.key=<file>` - gnupg key file
-- `-Dgpg.passphrase=<password>` - gnupg passphrase to unlock the key
-- `-Dgpg.finderprint=<hex>` - the signing key finger print (to use key other than first one)
+- `-Dmaven.resolve=true` - resolve all artifacts and their dependencies
+
+Use following environment variables to provide gnupg options:
+
+- `GPG_KEY_FILE=<file>` - GnuPG key file
+- `GPG_PASSPHRASE=<password>` - GnuPG passphrase to unlock the key
+- `GPG_FINGERPRINT=<hex>` - the signing key finger print (to use key other than first one)
 
 ## How It Works
 

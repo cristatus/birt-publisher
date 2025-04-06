@@ -73,7 +73,7 @@ public class Publisher {
     }
 
     // Update to snapshot version
-    if (Boolean.TRUE.equals(config.getMaven().snapshots)) {
+    if (config.getMaven().snapshots) {
       for (var unit : units) {
         if (unit.maven != null && unit.maven.version != null) {
           unit.maven.version = unit.maven.version + "-SNAPSHOT";
@@ -256,7 +256,7 @@ public class Publisher {
   private boolean resolve(ResolvedUnit unit) {
     if (unit.maven == null) return false;
     if (isCandidate(unit)) return false;
-    var canResolve = Boolean.TRUE.equals(config.getMaven().resolve);
+    var canResolve = config.getMaven().resolve;
     return !canResolve || maven.resolve(unit.maven.toString());
   }
 

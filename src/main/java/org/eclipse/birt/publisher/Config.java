@@ -25,9 +25,9 @@ public class Config {
   public static final String MAVEN_RESOLVE = "maven.resolve";
   public static final String MAVEN_SNAPSHOTS = "maven.snapshots";
 
-  private static final String GPG_KEY = "gpg.key";
-  private static final String GPG_PASSPHRASE = "gpg.passphrase";
-  private static final String GPG_FINGERPRINT = "gpg.fingerprint";
+  public static final String ENV_GPG_KEY = "GPG_KEY_FILE";
+  public static final String ENV_GPG_PASSPHRASE = "GPG_PASSPHRASE";
+  public static final String ENV_GPG_FINGERPRINT = "GPG_FINGERPRINT";
 
   public static class InfoConfig {
     public String group;
@@ -60,8 +60,8 @@ public class Config {
     public String username;
     public String password;
     public String group;
-    public Boolean resolve;
-    public Boolean snapshots;
+    public boolean resolve;
+    public boolean snapshots;
     public String gpgKey;
     public String gpgPassphrase;
     public String gpgFingerprint;
@@ -75,6 +75,8 @@ public class Config {
   private final List<PublishConfig> candidates = new ArrayList<>();
   private final List<PublishConfig> exclude = new ArrayList<>();
   private final List<PublishConfig> publish = new ArrayList<>();
+
+  private final MavenConfig maven = getMavenConfig();
 
   public List<SiteConfig> getSites() {
     return sites;
@@ -101,6 +103,10 @@ public class Config {
   }
 
   public MavenConfig getMaven() {
+    return maven;
+  }
+
+  private static MavenConfig getMavenConfig() {
     var maven = new MavenConfig();
     maven.repoId = System.getProperty(MAVEN_REPO_ID);
     maven.repoUrl = System.getProperty(MAVEN_REPO_URL);
@@ -110,9 +116,13 @@ public class Config {
     maven.group = System.getProperty(MAVEN_GROUP);
     maven.resolve = Boolean.getBoolean(MAVEN_RESOLVE);
     maven.snapshots = Boolean.getBoolean(MAVEN_SNAPSHOTS);
-    maven.gpgKey = System.getProperty(GPG_KEY);
-    maven.gpgPassphrase = System.getProperty(GPG_PASSPHRASE);
-    maven.gpgFingerprint = System.getProperty(GPG_FINGERPRINT);
+
+    var env = System.getenv();
+
+    maven.gpgKey = env.get(ENV_GPG_KEY);
+    maven.gpgPassphrase = env.get(ENV_GPG_PASSPHRASE);
+    maven.gpgFingerprint = env.get(ENV_GPG_FINGERPRINT);
+
     return maven;
   }
 
